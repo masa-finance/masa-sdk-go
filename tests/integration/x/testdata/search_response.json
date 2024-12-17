@@ -1,0 +1,46 @@
+{
+    "data": [
+        {
+            "Error": null,
+            "Tweet": {
+                "ConversationID": "1869169455139262531",
+                "GIFs": null,
+                "HTML": "Senator Cynthia Lummis meets with Trump's new Crypto Czar David Sacks and discusses her Strategic \u003ca href=\"https://twitter.com/hashtag/Bitcoin\"\u003e#Bitcoin\u003c/a\u003e Reserve bill.\u003cbr\u003e\u003cbr\u003e2025 could be historic if Lummis' vision for Bitcoin and digital assets comes true.",
+                "Hashtags": [
+                    "Bitcoin"
+                ],
+                "ID": "1869169455139262531",
+                "InReplyToStatus": null,
+                "InReplyToStatusID": "",
+                "IsPin": false,
+                "IsQuoted": false,
+                "IsReply": false,
+                "IsRetweet": false,
+                "IsSelfThread": false,
+                "Likes": 0,
+                "Mentions": null,
+                "Name": "Amdel Trades",
+                "PermanentURL": "https://twitter.com/AmdelTrades/status/1869169455139262531",
+                "Photos": null,
+                "Place": null,
+                "QuotedStatus": null,
+                "QuotedStatusID": "",
+                "Replies": 0,
+                "RetweetedStatus": null,
+                "RetweetedStatusID": "",
+                "Retweets": 0,
+                "SensitiveContent": false,
+                "Text": "Senator Cynthia Lummis meets with Trump's new Crypto Czar David Sacks and discusses her Strategic #Bitcoin Reserve bill.\n\n2025 could be historic if Lummis' vision for Bitcoin and digital assets comes true.",
+                "Thread": null,
+                "TimeParsed": "2024-12-17T23:55:00Z",
+                "Timestamp": 1734479700,
+                "URLs": null,
+                "UserID": "1474932954963091456",
+                "Username": "AmdelTrades",
+                "Videos": null,
+                "Views": 0
+            }
+        }
+    ],
+    "recordCount": 1
+}
