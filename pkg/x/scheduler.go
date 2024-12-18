@@ -64,19 +64,16 @@ func NewSearchScheduler(queue *RequestQueue) *SearchScheduler {
 //   - query: X search query string
 //   - count: Number of results to return
 //   - dateRange: Time range to search within
-func (s *SearchScheduler) AddScheduledSearch(id, query string, count int, dateRange time.Duration) {
+func (s *SearchScheduler) AddScheduledSearch(id, query string, count int, interval time.Duration) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	if dateRange == 0 {
-		dateRange = DefaultDateRange
-	}
-
+	s.interval = interval
 	s.searchConfigs[id] = &ScheduledSearch{
 		ID:        id,
 		Query:     query,
 		Count:     count,
-		DateRange: dateRange,
+		DateRange: DefaultDateRange,
 	}
 	logger.Debugf("Added scheduled search: %s with query: %s", id, query)
 }

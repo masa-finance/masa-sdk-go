@@ -3,13 +3,13 @@
         {
             "Error": null,
             "Tweet": {
-                "ConversationID": "1869175422455542155",
+                "ConversationID": "1869310453253546066",
                 "GIFs": null,
-                "HTML": "\u003ca href=\"https://twitter.com/RepKeithSelf\"\u003e@RepKeithSelf\u003c/a\u003e \u003ca href=\"https://twitter.com/kate_p45\"\u003e@kate_p45\u003c/a\u003e \u003ca href=\"https://twitter.com/elonmusk\"\u003e@elonmusk\u003c/a\u003e SHUT IT DOWN!!",
+                "HTML": "\u003ca href=\"https://twitter.com/elonmusk\"\u003e@elonmusk\u003c/a\u003e Do not pass this. The people are speaking",
                 "Hashtags": null,
-                "ID": "1869198334399074633",
+                "ID": "1869444447504855370",
                 "InReplyToStatus": null,
-                "InReplyToStatusID": "1869175422455542155",
+                "InReplyToStatusID": "1869310453253546066",
                 "IsPin": false,
                 "IsQuoted": false,
                 "IsReply": true,
@@ -18,23 +18,13 @@
                 "Likes": 0,
                 "Mentions": [
                     {
-                        "ID": "1612430165585416192",
-                        "Name": "Rep. Keith Self",
-                        "Username": "RepKeithSelf"
-                    },
-                    {
-                        "ID": "1681364744677085186",
-                        "Name": "Kate",
-                        "Username": "kate_p45"
-                    },
-                    {
                         "ID": "44196397",
                         "Name": "Elon Musk",
                         "Username": "elonmusk"
                     }
                 ],
-                "Name": "TAMMY GRADY",
-                "PermanentURL": "https://twitter.com/tammy_grady/status/1869198334399074633",
+                "Name": "Susanannanana",
+                "PermanentURL": "https://twitter.com/susan_seever/status/1869444447504855370",
                 "Photos": null,
                 "Place": null,
                 "QuotedStatus": null,
@@ -44,13 +34,13 @@
                 "RetweetedStatusID": "",
                 "Retweets": 0,
                 "SensitiveContent": false,
-                "Text": "@RepKeithSelf @kate_p45 @elonmusk SHUT IT DOWN!!",
+                "Text": "@elonmusk Do not pass this. The people are speaking",
                 "Thread": null,
-                "TimeParsed": "2024-12-18T01:49:45Z",
-                "Timestamp": 1734486585,
+                "TimeParsed": "2024-12-18T18:07:43Z",
+                "Timestamp": 1734545263,
                 "URLs": null,
-                "UserID": "2770244414",
-                "Username": "tammy_grady",
+                "UserID": "1548855738948255750",
+                "Username": "susan_seever",
                 "Videos": null,
                 "Views": 0
             }
