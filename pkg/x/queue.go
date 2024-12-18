@@ -2,6 +2,7 @@ package x
 
 import (
 	"container/heap"
+	"fmt"
 	"sync"
 	"time"
 
@@ -187,23 +188,67 @@ func (w *Worker) processRequest(data RequestData) {
 	var err error
 	for attempt := 0; attempt < DefaultRetries; attempt++ {
 		if attempt > 0 {
-			time.Sleep(BackoffBaseSleep * time.Duration(1<<attempt))
+			retryDelay := GetRetryDelay(err)
+			time.Sleep(retryDelay)
+			logger.Debugf("Worker %d: Retrying request after %v delay", w.id, retryDelay)
 		}
 
 		switch data.Type {
 		case ProfileRequest:
 			username, _ := data.Data["username"].(string)
 			_, err = GetXProfile("", "", username, nil)
+			if err != nil {
+				// Wrap generic errors in our custom error types
+				if apiErr, ok := err.(*APIError); ok {
+					switch apiErr.StatusCode {
+					case StatusRateLimit:
+						err = NewRateLimitError(0, fmt.Sprintf("worker-%d", w.id))
+					case StatusWorkerLimit:
+						err = &WorkerRateLimitError{RetryAfter: DefaultRateLimitDelay}
+					case StatusGatewayTimeout:
+						err = &TimeoutError{
+							Operation: "profile_fetch",
+							Duration:  TimeoutRetryDelay,
+						}
+					case StatusServiceDown:
+						err = &ConnectionError{Err: fmt.Errorf("service unavailable: %s", apiErr.Message)}
+					}
+				}
+			}
+
 		case SearchRequest:
 			query, _ := data.Data["query"].(string)
 			count, _ := data.Data["count"].(int)
 			if count == 0 {
 				count = 10
 			}
-			_, err = SearchX("", "", SearchParams{
+			resp, err := SearchX("", "", SearchParams{
 				Query: query,
 				Count: count,
 			})
+			if err != nil {
+				// Wrap generic errors in our custom error types
+				if apiErr, ok := err.(*APIError); ok {
+					switch apiErr.StatusCode {
+					case StatusRateLimit:
+						err = NewRateLimitError(0, fmt.Sprintf("worker-%d", w.id))
+					case StatusWorkerLimit:
+						err = &WorkerRateLimitError{RetryAfter: DefaultRateLimitDelay}
+					case StatusGatewayTimeout:
+						err = &TimeoutError{
+							Operation: "search_query",
+							Duration:  TimeoutRetryDelay,
+						}
+					case StatusServiceDown:
+						err = &ConnectionError{Err: fmt.Errorf("service unavailable: %s", apiErr.Message)}
+					}
+				}
+
+				// Handle empty response case
+				if resp != nil && resp.RecordCount == 0 {
+					err = &EmptyResponseError{Query: query}
+				}
+			}
 		}
 
 		if err == nil {
@@ -211,9 +256,36 @@ func (w *Worker) processRequest(data RequestData) {
 			return
 		}
 
-		logger.Warnf("Worker %d: Request attempt %d failed: %v", w.id, attempt+1, err)
+		// Check if the error is retryable
+		if !IsRetryable(err) {
+			logger.Errorf("Worker %d: Non-retryable error encountered: %v", w.id, err)
+			return
+		}
+
+		// Log the error with more context based on error type
+		switch e := err.(type) {
+		case *RateLimitError:
+			logger.Warnf("Worker %d: Rate limit hit, retry after %v (attempt %d/%d)",
+				w.id, e.RetryAfter, attempt+1, DefaultRetries)
+		case *WorkerRateLimitError:
+			logger.Warnf("Worker %d: All workers rate limited, retry after %v (attempt %d/%d)",
+				w.id, e.RetryAfter, attempt+1, DefaultRetries)
+		case *TimeoutError:
+			logger.Warnf("Worker %d: Request timed out after %v (attempt %d/%d)",
+				w.id, e.Duration, attempt+1, DefaultRetries)
+		case *ConnectionError:
+			logger.Warnf("Worker %d: Connection error: %v (attempt %d/%d)",
+				w.id, e.Err, attempt+1, DefaultRetries)
+		case *EmptyResponseError:
+			logger.Warnf("Worker %d: Empty response received: %v (attempt %d/%d)",
+				w.id, e.Query, attempt+1, DefaultRetries)
+		default:
+			logger.Warnf("Worker %d: Request failed: %v (attempt %d/%d)",
+				w.id, err, attempt+1, DefaultRetries)
+		}
 	}
-	logger.Errorf("Worker %d: Request failed after %d attempts", w.id, DefaultRetries)
+
+	logger.Errorf("Worker %d: Request failed permanently after %d attempts", w.id, DefaultRetries)
 }
 
 // Stop gracefully stops all workers and the queue
