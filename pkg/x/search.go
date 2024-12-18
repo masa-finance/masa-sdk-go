@@ -28,6 +28,14 @@ type SearchResponse struct {
 	RecordCount int                      `json:"recordCount"`
 }
 
+// ToMap converts SearchParams to a map for the queue
+func (p SearchParams) ToMap() map[string]interface{} {
+	return map[string]interface{}{
+		"query": p.Query,
+		"count": p.Count,
+	}
+}
+
 // SearchX sends a POST request to the Masa API endpoint to search recent tweets
 func SearchX(baseURL string, apiPath string, params SearchParams) (*SearchResponse, error) {
 	logger.Debugf("Starting search with params: %+v", params)
