@@ -1,0 +1,161 @@
+[
+    {
+        "response": {
+            "data": {
+                "Avatar": "https://pbs.twimg.com/profile_images/1858316737780781056/kPL61o0F_normal.jpg",
+                "Banner": "https://pbs.twimg.com/profile_banners/44196397/1726163678",
+                "Biography": "The people voted for major government reform",
+                "Birthday": "",
+                "FollowedBy": false,
+                "FollowersCount": 207685810,
+                "Following": false,
+                "FollowingCount": 101682,
+                "FriendsCount": 874,
+                "IsPrivate": false,
+                "IsVerified": false,
+                "Joined": "2009-06-02T20:12:29Z",
+                "LikesCount": 101682,
+                "ListedCount": 155322,
+                "Location": "",
+                "Name": "Elon Musk",
+                "PinnedTweetIDs": [],
+                "Sensitive": false,
+                "TweetsCount": 62890,
+                "URL": "https://twitter.com/elonmusk",
+                "UserID": "44196397",
+                "Username": "elonmusk",
+                "Website": ""
+            },
+            "recordCount": 1
+        },
+        "username": "elonmusk"
+    },
+    {
+        "response": {
+            "data": {
+                "Avatar": "https://pbs.twimg.com/profile_images/1748153260203229184/sXJIGMBk_normal.jpg",
+                "Banner": "https://pbs.twimg.com/profile_banners/295218901/1638557376",
+                "Biography": "mi pinxe lo crino tcati",
+                "Birthday": "",
+                "FollowedBy": false,
+                "FollowersCount": 5564837,
+                "Following": false,
+                "FollowingCount": 8452,
+                "FriendsCount": 434,
+                "IsPrivate": false,
+                "IsVerified": false,
+                "Joined": "2011-05-08T16:03:03Z",
+                "LikesCount": 8452,
+                "ListedCount": 36244,
+                "Location": "Earth",
+                "Name": "vitalik.eth",
+                "PinnedTweetIDs": [],
+                "Sensitive": false,
+                "TweetsCount": 20305,
+                "URL": "https://twitter.com/VitalikButerin",
+                "UserID": "295218901",
+                "Username": "VitalikButerin",
+                "Website": ""
+            },
+            "recordCount": 1
+        },
+        "username": "vitalikbuterin"
+    },
+    {
+        "response": {
+            "data": {
+                "Avatar": "https://pbs.twimg.com/profile_images/1748162870800744449/Be1H2j7Z_normal.jpg",
+                "Banner": "",
+                "Biography": "Co-founder of @getmasafi $MASA, nature lover, OG BTC \u0026 ALT miner, solo mined the first blocks of DOGE.",
+                "Birthday": "",
+                "FollowedBy": false,
+                "FollowersCount": 96785,
+                "Following": false,
+                "FollowingCount": 590,
+                "FriendsCount": 437,
+                "IsPrivate": false,
+                "IsVerified": false,
+                "Joined": "2011-04-27T19:54:48Z",
+                "LikesCount": 590,
+                "ListedCount": 34,
+                "Location": "San Francisco, CA",
+                "Name": "brendan",
+                "PinnedTweetIDs": [
+                    "1868006478323532133"
+                ],
+                "Sensitive": false,
+                "TweetsCount": 1653,
+                "URL": "https://twitter.com/BrendanPlayford",
+                "UserID": "288975755",
+                "Username": "BrendanPlayford",
+                "Website": ""
+            },
+            "recordCount": 1
+        },
+        "username": "brendanplayford"
+    },
+    {
+        "response": {
+            "data": {
+                "Avatar": "https://pbs.twimg.com/profile_images/1781374522966601732/HA_dnDvL_normal.jpg",
+                "Banner": "https://pbs.twimg.com/profile_banners/902926941413453824/1597864552",
+                "Biography": "@binance co-founder and former CEO, holder of #bnb #btc",
+                "Birthday": "",
+                "FollowedBy": false,
+                "FollowersCount": 9236097,
+                "Following": false,
+                "FollowingCount": 16878,
+                "FriendsCount": 1776,
+                "IsPrivate": false,
+                "IsVerified": false,
+                "Joined": "2017-08-30T16:12:13Z",
+                "LikesCount": 16878,
+                "ListedCount": 32054,
+                "Location": "",
+                "Name": "CZ 🔶 BNB",
+                "PinnedTweetIDs": [],
+                "Sensitive": false,
+                "TweetsCount": 8532,
+                "URL": "https://twitter.com/cz_binance",
+                "UserID": "902926941413453824",
+                "Username": "cz_binance",
+                "Website": "http://www.binance.com"
+            },
+            "recordCount": 1
+        },
+        "username": "cz_binance"
+    },
+    {
+        "response": {
+            "data": {
+                "Avatar": "https://pbs.twimg.com/profile_images/1362967502247129090/Q2ypSr9W_normal.jpg",
+                "Banner": "https://pbs.twimg.com/profile_banners/1469101279/1611263959",
+                "Biography": "My team uses this account now. Find me on https://t.co/xXqqqjq7Mt or https://t.co/DrzRPDF6ug\n\n#Bitcoin \u0026 Open Blockchains, since 2012. \n\nAuthor of 6 books.",
+                "Birthday": "",
+                "FollowedBy": false,
+                "FollowersCount": 771354,
+                "Following": false,
+                "FollowingCount": 12532,
+                "FriendsCount": 0,
+                "IsPrivate": false,
+                "IsVerified": false,
+                "Joined": "2013-05-30T06:33:49Z",
+                "LikesCount": 12532,
+                "ListedCount": 10877,
+                "Location": "59 countries and counting",
+                "Name": "Andreas (aantonop Team)",
+                "PinnedTweetIDs": [
+                    "1603394651364511748"
+                ],
+                "Sensitive": false,
+                "TweetsCount": 30575,
+                "URL": "https://twitter.com/aantonop",
+                "UserID": "1469101279",
+                "Username": "aantonop",
+                "Website": "https://aantonop.com/"
+            },
+            "recordCount": 1
+        },
+        "username": "aantonop"
+    }
+]

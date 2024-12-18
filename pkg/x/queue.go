@@ -2,7 +2,6 @@ package x
 
 import (
 	"container/heap"
-	"fmt"
 	"sync"
 	"time"
 
@@ -27,9 +26,10 @@ const (
 
 // RequestData holds the data for a request
 type RequestData struct {
-	Type     RequestType
-	Priority int
-	Data     map[string]interface{}
+	Type         RequestType
+	Priority     int
+	Data         map[string]interface{}
+	ResponseChan chan interface{}
 }
 
 // PriorityItem represents an item in the priority queue
@@ -111,23 +111,28 @@ func NewRequestQueue(maxWorkers int) *RequestQueue {
 	return rq
 }
 
-// AddRequest adds a new request to the queue
-func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interface{}, priority int) {
+// AddRequest adds a new request to the queue and returns a channel for the response
+func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interface{}, priority int) chan interface{} {
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
+
+	// Create response channel
+	responseChan := make(chan interface{}, 1)
 
 	if queue, ok := rq.queues[reqType]; ok {
 		item := &PriorityItem{
 			data: RequestData{
-				Type:     reqType,
-				Priority: priority,
-				Data:     data,
+				Type:         reqType,
+				Priority:     priority,
+				Data:         data,
+				ResponseChan: responseChan,
 			},
 			priority: priority,
 		}
 		heap.Push(queue, item)
 		logger.Debugf("Added request to %s queue with priority %d", reqType, priority)
 	}
+	return responseChan
 }
 
 // newWorker creates a new worker
@@ -186,6 +191,8 @@ func (w *Worker) start() {
 // processRequest handles a single request with retries
 func (w *Worker) processRequest(data RequestData) {
 	var err error
+	var response interface{}
+
 	for attempt := 0; attempt < DefaultRetries; attempt++ {
 		if attempt > 0 {
 			retryDelay := GetRetryDelay(err)
@@ -196,25 +203,7 @@ func (w *Worker) processRequest(data RequestData) {
 		switch data.Type {
 		case ProfileRequest:
 			username, _ := data.Data["username"].(string)
-			_, err = GetXProfile("", "", username, nil)
-			if err != nil {
-				// Wrap generic errors in our custom error types
-				if apiErr, ok := err.(*APIError); ok {
-					switch apiErr.StatusCode {
-					case StatusRateLimit:
-						err = NewRateLimitError(0, fmt.Sprintf("worker-%d", w.id))
-					case StatusWorkerLimit:
-						err = &WorkerRateLimitError{RetryAfter: DefaultRateLimitDelay}
-					case StatusGatewayTimeout:
-						err = &TimeoutError{
-							Operation: "profile_fetch",
-							Duration:  TimeoutRetryDelay,
-						}
-					case StatusServiceDown:
-						err = &ConnectionError{Err: fmt.Errorf("service unavailable: %s", apiErr.Message)}
-					}
-				}
-			}
+			response, err = GetXProfile("", "", username, nil)
 
 		case SearchRequest:
 			query, _ := data.Data["query"].(string)
@@ -222,37 +211,17 @@ func (w *Worker) processRequest(data RequestData) {
 			if count == 0 {
 				count = 10
 			}
-			resp, err := SearchX("", "", SearchParams{
+			response, err = SearchX("", "", SearchParams{
 				Query: query,
 				Count: count,
 			})
-			if err != nil {
-				// Wrap generic errors in our custom error types
-				if apiErr, ok := err.(*APIError); ok {
-					switch apiErr.StatusCode {
-					case StatusRateLimit:
-						err = NewRateLimitError(0, fmt.Sprintf("worker-%d", w.id))
-					case StatusWorkerLimit:
-						err = &WorkerRateLimitError{RetryAfter: DefaultRateLimitDelay}
-					case StatusGatewayTimeout:
-						err = &TimeoutError{
-							Operation: "search_query",
-							Duration:  TimeoutRetryDelay,
-						}
-					case StatusServiceDown:
-						err = &ConnectionError{Err: fmt.Errorf("service unavailable: %s", apiErr.Message)}
-					}
-				}
-
-				// Handle empty response case
-				if resp != nil && resp.RecordCount == 0 {
-					err = &EmptyResponseError{Query: query}
-				}
-			}
 		}
 
 		if err == nil {
 			logger.Debugf("Request processed successfully by worker %d", w.id)
+			// Send successful response
+			data.ResponseChan <- response
+			close(data.ResponseChan)
 			return
 		}
 
@@ -285,6 +254,9 @@ func (w *Worker) processRequest(data RequestData) {
 		}
 	}
 
+	// Send error on failure
+	data.ResponseChan <- err
+	close(data.ResponseChan)
 	logger.Errorf("Worker %d: Request failed permanently after %d attempts", w.id, DefaultRetries)
 }
 

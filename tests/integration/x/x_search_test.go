@@ -14,7 +14,7 @@ import (
 
 // Test constants for the search parameters
 const (
-	testQuery    = "Bitcoin"
+	testQuery    = "@elonmusk"
 	testCount    = 1
 	testFromDate = "2024-01-01"
 	testToDate   = "2024-03-20"

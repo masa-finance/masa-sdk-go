@@ -3,24 +3,33 @@
         {
             "Error": null,
             "Tweet": {
-                "ConversationID": "1869169455139262531",
+                "ConversationID": "1869133454950228312",
                 "GIFs": null,
-                "HTML": "Senator Cynthia Lummis meets with Trump's new Crypto Czar David Sacks and discusses her Strategic \u003ca href=\"https://twitter.com/hashtag/Bitcoin\"\u003e#Bitcoin\u003c/a\u003e Reserve bill.\u003cbr\u003e\u003cbr\u003e2025 could be historic if Lummis' vision for Bitcoin and digital assets comes true.",
-                "Hashtags": [
-                    "Bitcoin"
-                ],
-                "ID": "1869169455139262531",
+                "HTML": "\u003ca href=\"https://twitter.com/nicksortor\"\u003e@nicksortor\u003c/a\u003e \u003ca href=\"https://twitter.com/elonmusk\"\u003e@elonmusk\u003c/a\u003e 😂😂",
+                "Hashtags": null,
+                "ID": "1869195491659108403",
                 "InReplyToStatus": null,
-                "InReplyToStatusID": "",
+                "InReplyToStatusID": "1869135409634324649",
                 "IsPin": false,
                 "IsQuoted": false,
-                "IsReply": false,
+                "IsReply": true,
                 "IsRetweet": false,
                 "IsSelfThread": false,
                 "Likes": 0,
-                "Mentions": null,
-                "Name": "Amdel Trades",
-                "PermanentURL": "https://twitter.com/AmdelTrades/status/1869169455139262531",
+                "Mentions": [
+                    {
+                        "ID": "2162812627",
+                        "Name": "Nick Sortor",
+                        "Username": "nicksortor"
+                    },
+                    {
+                        "ID": "44196397",
+                        "Name": "Elon Musk",
+                        "Username": "elonmusk"
+                    }
+                ],
+                "Name": "EricTalksShit",
+                "PermanentURL": "https://twitter.com/EricTalksShit/status/1869195491659108403",
                 "Photos": null,
                 "Place": null,
                 "QuotedStatus": null,
@@ -30,13 +39,13 @@
                 "RetweetedStatusID": "",
                 "Retweets": 0,
                 "SensitiveContent": false,
-                "Text": "Senator Cynthia Lummis meets with Trump's new Crypto Czar David Sacks and discusses her Strategic #Bitcoin Reserve bill.\n\n2025 could be historic if Lummis' vision for Bitcoin and digital assets comes true.",
+                "Text": "@nicksortor @elonmusk 😂😂",
                 "Thread": null,
-                "TimeParsed": "2024-12-17T23:55:00Z",
-                "Timestamp": 1734479700,
+                "TimeParsed": "2024-12-18T01:38:27Z",
+                "Timestamp": 1734485907,
                 "URLs": null,
-                "UserID": "1474932954963091456",
-                "Username": "AmdelTrades",
+                "UserID": "1852079325668904960",
+                "Username": "EricTalksShit",
                 "Videos": null,
                 "Views": 0
             }
