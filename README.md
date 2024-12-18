@@ -78,7 +78,7 @@ The SDK provides custom error types for different scenarios:
 ## Testing
 
 ```bash
-go test ./tests/integration/... -v
+ginkgo tests/integration/x/... -v
 ```
 
 ## Contributing

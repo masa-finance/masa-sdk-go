@@ -3,13 +3,13 @@
         {
             "Error": null,
             "Tweet": {
-                "ConversationID": "1869133454950228312",
+                "ConversationID": "1869175422455542155",
                 "GIFs": null,
-                "HTML": "\u003ca href=\"https://twitter.com/nicksortor\"\u003e@nicksortor\u003c/a\u003e \u003ca href=\"https://twitter.com/elonmusk\"\u003e@elonmusk\u003c/a\u003e 😂😂",
+                "HTML": "\u003ca href=\"https://twitter.com/RepKeithSelf\"\u003e@RepKeithSelf\u003c/a\u003e \u003ca href=\"https://twitter.com/kate_p45\"\u003e@kate_p45\u003c/a\u003e \u003ca href=\"https://twitter.com/elonmusk\"\u003e@elonmusk\u003c/a\u003e SHUT IT DOWN!!",
                 "Hashtags": null,
-                "ID": "1869195491659108403",
+                "ID": "1869198334399074633",
                 "InReplyToStatus": null,
-                "InReplyToStatusID": "1869135409634324649",
+                "InReplyToStatusID": "1869175422455542155",
                 "IsPin": false,
                 "IsQuoted": false,
                 "IsReply": true,
@@ -18,9 +18,14 @@
                 "Likes": 0,
                 "Mentions": [
                     {
-                        "ID": "2162812627",
-                        "Name": "Nick Sortor",
-                        "Username": "nicksortor"
+                        "ID": "1612430165585416192",
+                        "Name": "Rep. Keith Self",
+                        "Username": "RepKeithSelf"
+                    },
+                    {
+                        "ID": "1681364744677085186",
+                        "Name": "Kate",
+                        "Username": "kate_p45"
                     },
                     {
                         "ID": "44196397",
@@ -28,8 +33,8 @@
                         "Username": "elonmusk"
                     }
                 ],
-                "Name": "EricTalksShit",
-                "PermanentURL": "https://twitter.com/EricTalksShit/status/1869195491659108403",
+                "Name": "TAMMY GRADY",
+                "PermanentURL": "https://twitter.com/tammy_grady/status/1869198334399074633",
                 "Photos": null,
                 "Place": null,
                 "QuotedStatus": null,
@@ -39,13 +44,13 @@
                 "RetweetedStatusID": "",
                 "Retweets": 0,
                 "SensitiveContent": false,
-                "Text": "@nicksortor @elonmusk 😂😂",
+                "Text": "@RepKeithSelf @kate_p45 @elonmusk SHUT IT DOWN!!",
                 "Thread": null,
-                "TimeParsed": "2024-12-18T01:38:27Z",
-                "Timestamp": 1734485907,
+                "TimeParsed": "2024-12-18T01:49:45Z",
+                "Timestamp": 1734486585,
                 "URLs": null,
-                "UserID": "1852079325668904960",
-                "Username": "EricTalksShit",
+                "UserID": "2770244414",
+                "Username": "tammy_grady",
                 "Videos": null,
                 "Views": 0
             }
