@@ -3,6 +3,7 @@ package x
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -133,36 +134,69 @@ func (e *ConnectionError) Error() string {
 // Error handling utilities
 // ----------------------
 
-// IsRetryable returns true if the error is temporary and the operation can be retried
+// IsRetryable returns true if the error is temporary and the operation can be retried.
+// By default, we consider all errors retryable unless explicitly marked as non-retryable.
 func IsRetryable(err error) bool {
-	switch e := err.(type) {
-	case *RateLimitError, *TimeoutError, *ConnectionError,
-		*WorkerRateLimitError, *EmptyResponseError:
-		return true
-	case *APIError:
-		return e.StatusCode == StatusGatewayTimeout ||
-			e.StatusCode == StatusServiceDown
-	default:
+	if err == nil {
 		return false
 	}
+
+	// Check for specific non-retryable conditions
+	switch e := err.(type) {
+	case *APIError:
+		// Only consider these specific status codes as non-retryable
+		switch e.StatusCode {
+		case 400, // Bad Request
+			401, // Unauthorized
+			403, // Forbidden
+			404, // Not Found
+			422: // Unprocessable Entity
+			return false
+		}
+		return true
+	}
+
+	// Consider all other errors as retryable
+	return true
 }
 
 // GetRetryDelay returns the recommended retry delay for the error
 func GetRetryDelay(err error) time.Duration {
 	switch e := err.(type) {
 	case *RateLimitError:
-		return e.RetryAfter
+		if e.RetryAfter > 0 {
+			return e.RetryAfter
+		}
+		return DefaultRateLimitDelay
 	case *WorkerRateLimitError:
-		return e.RetryAfter
+		if e.RetryAfter > 0 {
+			return e.RetryAfter
+		}
+		return DefaultRateLimitDelay
 	case *TimeoutError:
 		return TimeoutRetryDelay
 	case *EmptyResponseError:
 		return EmptyResponseDelay
 	case *ConnectionError:
 		return ConnectionRetryDelay
-	default:
-		return DefaultRetryDelay
+	case *APIError:
+		switch {
+		case e.StatusCode == StatusRateLimit:
+			return DefaultRateLimitDelay
+		case e.StatusCode >= 500:
+			return TimeoutRetryDelay
+		}
 	}
+
+	// For unknown errors, use exponential backoff with jitter
+	return getBackoffDelay()
+}
+
+// getBackoffDelay calculates a delay with exponential backoff and jitter
+func getBackoffDelay() time.Duration {
+	// Add random jitter between 1-5 seconds
+	jitter := time.Duration(1+rand.Intn(4)) * time.Second
+	return DefaultRetryDelay + jitter
 }
 
 // NewRateLimitError creates a new RateLimitError with default retry delay if none specified

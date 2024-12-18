@@ -4,6 +4,7 @@ package x
 
 import (
 	"container/heap"
+	"fmt"
 	"sync"
 	"time"
 
@@ -221,8 +222,9 @@ func (w *Worker) processRequest(data RequestData) {
 	for attempt := 0; attempt < DefaultRetries; attempt++ {
 		if attempt > 0 {
 			retryDelay := GetRetryDelay(err)
+			logger.Debugf("Worker %d: Retrying request after %v delay (attempt %d/%d)",
+				w.id, retryDelay, attempt+1, DefaultRetries)
 			time.Sleep(retryDelay)
-			logger.Debugf("Worker %d: Retrying request after %v delay", w.id, retryDelay)
 		}
 
 		switch data.Type {
@@ -244,19 +246,29 @@ func (w *Worker) processRequest(data RequestData) {
 
 		if err == nil {
 			logger.Debugf("Request processed successfully by worker %d", w.id)
-			// Send successful response
 			data.ResponseChan <- response
 			close(data.ResponseChan)
 			return
 		}
 
-		// Check if the error is retryable
-		if !IsRetryable(err) {
-			logger.Errorf("Worker %d: Non-retryable error encountered: %v", w.id, err)
-			return
+		// Convert generic errors to specific error types for better handling
+		if apiErr, ok := err.(*APIError); ok {
+			switch apiErr.StatusCode {
+			case 504:
+				err = &TimeoutError{
+					Operation: string(data.Type),
+					Duration:  TimeoutRetryDelay,
+				}
+			case 503:
+				err = &ConnectionError{Err: fmt.Errorf("service unavailable: %s", apiErr.Message)}
+			case StatusRateLimit:
+				err = NewRateLimitError(DefaultRateLimitDelay, "")
+			case StatusWorkerLimit:
+				err = &WorkerRateLimitError{RetryAfter: DefaultRateLimitDelay}
+			}
 		}
 
-		// Log the error with more context based on error type
+		// Log the error with context and continue retrying
 		switch e := err.(type) {
 		case *RateLimitError:
 			logger.Warnf("Worker %d: Rate limit hit, retry after %v (attempt %d/%d)",
@@ -273,16 +285,20 @@ func (w *Worker) processRequest(data RequestData) {
 		case *EmptyResponseError:
 			logger.Warnf("Worker %d: Empty response received: %v (attempt %d/%d)",
 				w.id, e.Query, attempt+1, DefaultRetries)
+		case *APIError:
+			logger.Warnf("Worker %d: API error (status %d): %s (attempt %d/%d)",
+				w.id, e.StatusCode, e.Message, attempt+1, DefaultRetries)
 		default:
 			logger.Warnf("Worker %d: Request failed: %v (attempt %d/%d)",
 				w.id, err, attempt+1, DefaultRetries)
 		}
 	}
 
-	// Send error on failure
+	// All retries exhausted
 	data.ResponseChan <- err
 	close(data.ResponseChan)
-	logger.Errorf("Worker %d: Request failed permanently after %d attempts", w.id, DefaultRetries)
+	logger.Errorf("Worker %d: Request failed permanently after %d attempts: %v",
+		w.id, DefaultRetries, err)
 }
 
 // Stop gracefully stops all workers and the queue
