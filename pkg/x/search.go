@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/masa-finance/masa-sdk-go/pkg/logger"
 )
 
 func init() {
@@ -19,6 +20,9 @@ func init() {
 		// It's okay if .env doesn't exist, we'll use defaults
 		log.Printf("Warning: .env file not found, using default values")
 	}
+
+	// Initialize logger with environment configuration
+	logger.Init(getEnvWithFallback("LOG_LEVEL", "INFO"))
 }
 
 // Default configuration values
@@ -43,9 +47,12 @@ type SearchResponse struct {
 
 // SearchX sends a POST request to the Masa API endpoint to search recent tweets
 func SearchX(baseURL string, apiPath string, params SearchParams) (*SearchResponse, error) {
+	logger.Debugf("Starting search with params: %+v", params)
+
 	// Use defaults if empty
 	if baseURL == "" {
 		baseURL = DefaultBaseURL
+		logger.Debugf("Using default base URL: %s", baseURL)
 	}
 	if apiPath == "" {
 		apiPath = DefaultAPIPath
@@ -97,6 +104,7 @@ func SearchX(baseURL string, apiPath string, params SearchParams) (*SearchRespon
 
 	// Check status code
 	if resp.StatusCode != http.StatusOK {
+		logger.Warnf("Request failed with status %d", resp.StatusCode)
 		return nil, fmt.Errorf("API request failed with status %d: %s", resp.StatusCode, string(respBody))
 	}
 
