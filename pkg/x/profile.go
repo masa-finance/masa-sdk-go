@@ -1,3 +1,4 @@
+// Package x provides functionality for interacting with the Masa Protocol X (formerly Twitter) API.
 package x
 
 import (
@@ -11,16 +12,41 @@ import (
 )
 
 var (
+	// DefaultProfilePath is the default API endpoint path for fetching X (Twitter) profiles
 	DefaultProfilePath = DefaultAPIBase + "/twitter/profile"
 )
 
-// ProfileResponse represents the API response structure for profile requests
+// ProfileResponse represents the API response structure for profile requests.
+// It contains the profile data and metadata about the response.
 type ProfileResponse struct {
-	Data        map[string]interface{} `json:"data"`
-	RecordCount int                    `json:"recordCount"`
+	// Data contains the profile information as a map of fields
+	Data map[string]interface{} `json:"data"`
+
+	// RecordCount indicates if a profile was found (1) or not (0)
+	RecordCount int `json:"recordCount"`
 }
 
-// GetXProfile sends a GET request to the Masa API endpoint to fetch a Twitter profile
+// GetXProfile sends a GET request to the Masa API endpoint to fetch a Twitter profile.
+// It handles the full lifecycle of the request including parameter validation,
+// request preparation, execution, and response parsing.
+//
+// Parameters:
+//   - baseURL: The base URL for the API (uses DefaultBaseURL if empty)
+//   - apiPath: The API endpoint path (uses DefaultProfilePath if empty)
+//   - username: The X (Twitter) username to fetch the profile for
+//   - additionalParams: Optional map of additional query parameters to include
+//
+// Returns:
+//   - *ProfileResponse: Contains the profile data and metadata
+//   - error: Any error encountered during the request
+//
+// Example:
+//
+//	response, err := GetXProfile("", "", "masafinance", nil)
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	fmt.Printf("Profile data: %+v\n", response.Data)
 func GetXProfile(baseURL, apiPath, username string, additionalParams map[string]string) (*ProfileResponse, error) {
 	logger.Debugf("Starting profile fetch for username: %s", username)
 

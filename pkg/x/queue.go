@@ -1,3 +1,5 @@
+// Package x provides functionality for interacting with the Masa Protocol X (formerly Twitter) API.
+// This file implements a priority queue-based request processing system with rate limiting and retries.
 package x
 
 import (
@@ -8,41 +10,48 @@ import (
 	"github.com/masa-finance/masa-sdk-go/pkg/logger"
 )
 
+// Default configuration values for the request queue system
 const (
+	// DefaultMaxConcurrentRequests is the default number of concurrent worker goroutines
 	DefaultMaxConcurrentRequests = 5
-	DefaultAPIRequestsPerSecond  = 20
-	DefaultRetries               = 10
-	DefaultPriority              = 100
-	BackoffBaseSleep             = 1 * time.Second
+	// DefaultAPIRequestsPerSecond is the default rate limit for API requests
+	DefaultAPIRequestsPerSecond = 20
+	// DefaultRetries is the default number of retry attempts for failed requests
+	DefaultRetries = 10
+	// DefaultPriority is the default priority level for requests
+	DefaultPriority = 100
+	// BackoffBaseSleep is the base sleep duration for exponential backoff
+	BackoffBaseSleep = 1 * time.Second
 )
 
-// RequestType defines the type of request
+// RequestType defines the type of request to be processed
 type RequestType string
 
+// Supported request types
 const (
-	SearchRequest  RequestType = "search"
-	ProfileRequest RequestType = "profile"
+	SearchRequest  RequestType = "search"  // For X search requests
+	ProfileRequest RequestType = "profile" // For X profile requests
 )
 
-// RequestData holds the data for a request
+// RequestData holds the data and metadata for a request to be processed
 type RequestData struct {
-	Type         RequestType
-	Priority     int
-	Data         map[string]interface{}
-	ResponseChan chan interface{}
+	Type         RequestType            // Type of the request (search/profile)
+	Priority     int                    // Priority level of the request
+	Data         map[string]interface{} // Request parameters
+	ResponseChan chan interface{}       // Channel for receiving the response
 }
 
-// PriorityItem represents an item in the priority queue
+// PriorityItem represents an item in the priority queue with its metadata
 type PriorityItem struct {
-	data     RequestData
-	priority int
-	index    int
+	data     RequestData // The actual request data
+	priority int         // Priority level for queue ordering
+	index    int         // Index in the heap for efficient operations
 }
 
-// PriorityQueue implements heap.Interface
+// PriorityQueue implements heap.Interface for priority-based request processing
 type PriorityQueue []*PriorityItem
 
-// Queue methods implementation
+// Queue methods implementation for the heap.Interface
 func (pq PriorityQueue) Len() int           { return len(pq) }
 func (pq PriorityQueue) Less(i, j int) bool { return pq[i].priority < pq[j].priority }
 func (pq PriorityQueue) Swap(i, j int) {
@@ -51,6 +60,7 @@ func (pq PriorityQueue) Swap(i, j int) {
 	pq[j].index = j
 }
 
+// Push adds an item to the priority queue
 func (pq *PriorityQueue) Push(x interface{}) {
 	n := len(*pq)
 	item := x.(*PriorityItem)
@@ -58,6 +68,7 @@ func (pq *PriorityQueue) Push(x interface{}) {
 	*pq = append(*pq, item)
 }
 
+// Pop removes and returns the highest priority item from the queue
 func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
@@ -68,26 +79,32 @@ func (pq *PriorityQueue) Pop() interface{} {
 	return item
 }
 
-// Worker represents a request processing worker
+// Worker represents a request processing worker goroutine
 type Worker struct {
-	id         int
-	jobChannel chan RequestData
-	quit       chan bool
-	rateLimit  *time.Ticker
-	queue      *RequestQueue
+	id         int              // Unique identifier for the worker
+	jobChannel chan RequestData // Channel for receiving jobs
+	quit       chan bool        // Channel for shutdown signaling
+	rateLimit  *time.Ticker     // Rate limiter for API requests
+	queue      *RequestQueue    // Reference to parent queue
 }
 
-// RequestQueue manages request processing
+// RequestQueue manages the request processing system
 type RequestQueue struct {
-	queues            map[RequestType]*PriorityQueue
-	workers           []*Worker
-	jobChannel        chan RequestData
-	maxWorkers        int
-	requestsPerSecond float64
-	mu                sync.Mutex
+	queues            map[RequestType]*PriorityQueue // Map of request type to priority queues
+	workers           []*Worker                      // Pool of worker goroutines
+	jobChannel        chan RequestData               // Channel for distributing jobs
+	maxWorkers        int                            // Maximum number of concurrent workers
+	requestsPerSecond float64                        // Rate limit for API requests
+	mu                sync.Mutex                     // Mutex for thread-safe operations
 }
 
-// NewRequestQueue creates a new RequestQueue instance
+// NewRequestQueue creates and initializes a new RequestQueue instance
+//
+// Parameters:
+//   - maxWorkers: Maximum number of concurrent worker goroutines
+//
+// Returns:
+//   - *RequestQueue: Initialized request queue instance
 func NewRequestQueue(maxWorkers int) *RequestQueue {
 	if maxWorkers <= 0 {
 		maxWorkers = DefaultMaxConcurrentRequests
@@ -111,7 +128,15 @@ func NewRequestQueue(maxWorkers int) *RequestQueue {
 	return rq
 }
 
-// AddRequest adds a new request to the queue and returns a channel for the response
+// AddRequest adds a new request to the appropriate queue and returns a response channel
+//
+// Parameters:
+//   - reqType: Type of request (search/profile)
+//   - data: Request parameters
+//   - priority: Priority level for queue ordering
+//
+// Returns:
+//   - chan interface{}: Channel for receiving the request response
 func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interface{}, priority int) chan interface{} {
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
@@ -135,7 +160,7 @@ func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interfac
 	return responseChan
 }
 
-// newWorker creates a new worker
+// newWorker creates and initializes a new worker instance
 func (rq *RequestQueue) newWorker(id int) *Worker {
 	return &Worker{
 		id:         id,
@@ -146,7 +171,7 @@ func (rq *RequestQueue) newWorker(id int) *Worker {
 	}
 }
 
-// Start begins processing requests with a worker pool
+// Start begins processing requests by initializing workers and starting the queue processor
 func (rq *RequestQueue) Start() {
 	// Initialize workers
 	rq.workers = make([]*Worker, rq.maxWorkers)
@@ -160,7 +185,7 @@ func (rq *RequestQueue) Start() {
 	go rq.processQueue()
 }
 
-// processQueue continuously checks for items in the priority queues
+// processQueue continuously checks for and distributes items from the priority queues
 func (rq *RequestQueue) processQueue() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	for range ticker.C {
@@ -188,7 +213,7 @@ func (w *Worker) start() {
 	}
 }
 
-// processRequest handles a single request with retries
+// processRequest handles a single request with retries and error handling
 func (w *Worker) processRequest(data RequestData) {
 	var err error
 	var response interface{}
@@ -271,6 +296,12 @@ func (rq *RequestQueue) Stop() {
 }
 
 // GetQueueLength returns the current length of a specific queue
+//
+// Parameters:
+//   - reqType: Type of queue to check (search/profile)
+//
+// Returns:
+//   - int: Number of items in the queue
 func (rq *RequestQueue) GetQueueLength(reqType RequestType) int {
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
@@ -282,6 +313,9 @@ func (rq *RequestQueue) GetQueueLength(reqType RequestType) int {
 }
 
 // GetActiveWorkers returns the number of currently active workers
+//
+// Returns:
+//   - int: Number of active worker goroutines
 func (rq *RequestQueue) GetActiveWorkers() int {
 	return rq.maxWorkers
 }

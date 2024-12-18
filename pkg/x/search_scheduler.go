@@ -1,3 +1,4 @@
+// Package x provides functionality for interacting with the Masa Protocol X (formerly Twitter) API.
 package x
 
 import (
@@ -10,29 +11,42 @@ import (
 )
 
 const (
+	// DefaultSearchInterval is the default time between scheduled search executions (15 minutes)
 	DefaultSearchInterval = 15 * time.Minute
-	DefaultDateRange      = 24 * time.Hour
+
+	// DefaultDateRange is the default time range to search within (24 hours)
+	DefaultDateRange = 24 * time.Hour
 )
 
-// SearchScheduler manages scheduled X searches
+// SearchScheduler manages scheduled X searches by maintaining a queue of search configurations
+// and executing them periodically based on a configured interval. It handles concurrent access
+// to search configurations and provides methods to add, remove and execute searches safely.
 type SearchScheduler struct {
-	queue         *RequestQueue
-	searchConfigs map[string]*ScheduledSearch
-	interval      time.Duration
-	mu            sync.RWMutex
-	stop          chan struct{}
+	queue         *RequestQueue               // Queue for processing search requests
+	searchConfigs map[string]*ScheduledSearch // Map of search configurations indexed by ID
+	interval      time.Duration               // Time between search executions
+	mu            sync.RWMutex                // Mutex for thread-safe access to configs
+	stop          chan struct{}               // Channel for stopping the scheduler
 }
 
-// ScheduledSearch represents a configured periodic search
+// ScheduledSearch represents a configured periodic search with parameters and metadata.
+// Each search is uniquely identified and tracks its last execution time.
 type ScheduledSearch struct {
-	ID          string
-	Query       string
-	Count       int
-	DateRange   time.Duration
-	LastRunTime time.Time
+	ID          string        // Unique identifier for the search
+	Query       string        // X search query string
+	Count       int           // Number of results to return
+	DateRange   time.Duration // Time range to search within
+	LastRunTime time.Time     // When the search was last executed
 }
 
-// NewSearchScheduler creates a new search scheduler
+// NewSearchScheduler creates a new search scheduler with the provided request queue.
+// It initializes the scheduler with default interval and empty search configurations.
+//
+// Parameters:
+//   - queue: RequestQueue instance for processing search requests
+//
+// Returns:
+//   - *SearchScheduler: New scheduler instance
 func NewSearchScheduler(queue *RequestQueue) *SearchScheduler {
 	return &SearchScheduler{
 		queue:         queue,
@@ -42,7 +56,14 @@ func NewSearchScheduler(queue *RequestQueue) *SearchScheduler {
 	}
 }
 
-// AddScheduledSearch adds a new search to be executed periodically
+// AddScheduledSearch adds a new search configuration to be executed periodically.
+// If dateRange is 0, it uses the DefaultDateRange (24h).
+//
+// Parameters:
+//   - id: Unique identifier for the search
+//   - query: X search query string
+//   - count: Number of results to return
+//   - dateRange: Time range to search within
 func (s *SearchScheduler) AddScheduledSearch(id, query string, count int, dateRange time.Duration) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -60,7 +81,10 @@ func (s *SearchScheduler) AddScheduledSearch(id, query string, count int, dateRa
 	logger.Debugf("Added scheduled search: %s with query: %s", id, query)
 }
 
-// RemoveScheduledSearch removes a scheduled search by ID
+// RemoveScheduledSearch removes a scheduled search configuration by its ID.
+//
+// Parameters:
+//   - id: ID of the search to remove
 func (s *SearchScheduler) RemoveScheduledSearch(id string) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -69,7 +93,8 @@ func (s *SearchScheduler) RemoveScheduledSearch(id string) {
 	logger.Debugf("Removed scheduled search: %s", id)
 }
 
-// Start begins the scheduler
+// Start begins the scheduler, executing searches at the configured interval.
+// Runs in a separate goroutine until Stop is called.
 func (s *SearchScheduler) Start() {
 	ticker := time.NewTicker(s.interval)
 	go func() {
@@ -86,13 +111,15 @@ func (s *SearchScheduler) Start() {
 	logger.Infof("Search scheduler started with interval: %v", s.interval)
 }
 
-// Stop halts the scheduler
+// Stop halts the scheduler, preventing further search executions.
 func (s *SearchScheduler) Stop() {
 	close(s.stop)
 	logger.Infof("Search scheduler stopped")
 }
 
-// executeScheduledSearches runs all configured searches
+// executeScheduledSearches runs all configured searches, adding date filters
+// if not already present in the query. Each search is executed asynchronously
+// through the request queue.
 func (s *SearchScheduler) executeScheduledSearches() {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -139,7 +166,11 @@ func (s *SearchScheduler) executeScheduledSearches() {
 	}
 }
 
-// InitializeSearches sets up multiple searches in the scheduler
+// InitializeSearches sets up multiple searches in the scheduler at once.
+// Each search uses the default 24h date range.
+//
+// Parameters:
+//   - searches: Slice of search configurations containing ID, query and count
 func (s *SearchScheduler) InitializeSearches(searches []struct {
 	ID    string
 	Query string
