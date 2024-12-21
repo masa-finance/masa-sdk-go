@@ -2,7 +2,7 @@
 // and interactions through scheduled searches.
 //
 // The package implements a concurrent monitoring system that periodically checks for
-// mentions and replies to specific usernames using X's search API. It uses a worker
+// mentions and replies to specific usernames using Masa's X search API through SN42 or the Masa Protocol. It uses a worker
 // pool pattern to handle multiple search requests efficiently.
 //
 // Example usage:
