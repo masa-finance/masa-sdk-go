@@ -1,4 +1,41 @@
 // Package nineteen provides a client for the Nineteen AI API
+//
+// The nineteen package implements a Go client for interacting with the Nineteen AI API.
+// It provides functionality for both standard and streaming chat completions using
+// various LLM models.
+//
+// Supported models:
+//   - unsloth/Llama-3.2-3B-Instruct
+//   - hugging-quants/Meta-Llama-3.1-70B-Instruct-AWQ-INT4
+//   - unsloth/Meta-Llama-3.1-8B-Instruct
+//
+// Default settings:
+//   - Model: unsloth/Meta-Llama-3.1-8B-Instruct
+//   - Temperature: 0.5
+//   - MaxTokens: 500
+//   - TopP: 0.5
+//   - Stream: false
+//   - RateLimit: 6.0 requests per second
+//
+// Basic usage:
+//
+//	client := nineteen.NewClient("your-api-key")
+//	messages := []nineteen.Message{
+//	    {Role: "user", Content: "Hello!"},
+//	}
+//	req := nineteen.NewChatCompletionRequest(messages)
+//	resp, err := client.CreateChatCompletion(context.Background(), req)
+//
+// Streaming usage:
+//
+//	req.Stream = true
+//	chunkChan, errChan := client.CreateChatCompletionStream(context.Background(), req)
+//
+// Client options:
+//   - WithBaseURL(baseURL string)
+//   - WithTimeout(timeout time.Duration)
+//   - WithHTTPClient(httpClient *http.Client)
+//   - WithRateLimit(rps float64)
 package nineteen
 
 import (
