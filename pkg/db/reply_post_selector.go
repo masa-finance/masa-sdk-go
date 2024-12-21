@@ -22,7 +22,7 @@ Consider these criteria:
 - Preferably not a reply to another tweet
 - Recent tweets are preferred
 
-Keywords to look for: TAO, Bittensor, BTN, subnet, validator, neuron, meritocracy, AI, decentralized intelligence
+Keywords to look for: TAO, Bittensor, subnet, validator, neuron, meritocracy, AI, decentralized intelligence
 
 IMPORTANT: Return ONLY a valid JSON object with no additional text or prefixes. The JSON must have these fields:
 - selected_tweet_id: the ID of the selected tweet (MUST be a string, wrapped in quotes)
