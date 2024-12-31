@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	// DefaultSearchInterval is the default time between scheduled search executions (15 minutes)
-	DefaultSearchInterval = 15 * time.Minute
+	// DefaultSearchInterval is the default time between scheduled search executions (240 minutes)
+	DefaultSearchInterval = 240 * time.Minute
 
 	// DefaultDateRange is the default time range to search within (24 hours)
 	DefaultDateRange = 24 * time.Hour
