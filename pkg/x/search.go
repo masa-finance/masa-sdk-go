@@ -14,7 +14,7 @@ import (
 
 var (
 	// DefaultAPIPath is the default API endpoint path for searching recent tweets
-	DefaultAPIPath = DefaultAPIBase + "/twitter/tweets/recent"
+	DefaultAPIPath = "/twitter/tweets/recent"
 )
 
 // SearchParams represents the parameters for the search request.
