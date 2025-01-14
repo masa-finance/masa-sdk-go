@@ -12,6 +12,13 @@ import (
 	"github.com/masa-finance/masa-sdk-go/pkg/logger"
 )
 
+const (
+	// DefaultMasaDir is the default directory for Masa files in the user's home
+	DefaultMasaDir = ".masa"
+	// CookieFileFormat is the format string for cookie files
+	CookieFileFormat = "%s_twitter_cookies.json"
+)
+
 // AuthOptions represents different authentication methods
 type AuthOptions struct {
 	Username      string
@@ -144,13 +151,13 @@ func getCookiePath(username string) (string, error) {
 		return "", fmt.Errorf("failed to get home directory: %w", err)
 	}
 
-	masaDir := filepath.Join(homeDir, ".masa")
+	masaDir := filepath.Join(homeDir, DefaultMasaDir)
 	if err := os.MkdirAll(masaDir, 0700); err != nil {
 		logger.Errorf("Failed to create .masa directory: %v", err)
 		return "", fmt.Errorf("failed to create .masa directory: %w", err)
 	}
 
-	path := filepath.Join(masaDir, fmt.Sprintf("%s_twitter_cookies.json", username))
+	path := filepath.Join(masaDir, fmt.Sprintf(CookieFileFormat, username))
 	logger.Debugf("Cookie path for %s: %s", username, path)
 	return path, nil
 }
