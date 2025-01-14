@@ -143,6 +143,13 @@ func (rq *RequestQueue) LoadState() error {
 				continue
 			}
 
+			if reqType == SearchRequest {
+				if count, exists := item.Data["count"].(float64); exists {
+
+					item.Data["count"] = int(count)
+				}
+			}
+
 			responseChan := make(chan interface{}, 1)
 			heap.Push(queue, &PriorityItem{
 				data: RequestData{
