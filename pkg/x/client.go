@@ -21,8 +21,8 @@ func init() {
 
 // Default configuration values
 var (
-	DefaultBaseURL = getEnvWithFallback("MASA_PROTOCOL_BASE_URL", "http://localhost:8080")
-	DefaultAPIBase = getEnvWithFallback("MASA_PROTOCOL_API_PATH", "/api/v1/data")
+	DefaultBaseURL = getEnvWithFallback("MASA_PROTOCOL_NODE_API", "http://localhost:8080")
+	DefaultAPIBase = getEnvWithFallback("MASA_PROTOCOL_NODE_API_PATH", "/api/v1/data")
 )
 
 // Helper function to get environment variable with fallback
