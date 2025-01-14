@@ -90,8 +90,13 @@ func SearchX(baseURL string, apiPath string, params SearchParams) (*SearchRespon
 		apiPath = DefaultAPIPath
 	}
 
-	// Construct full URL
-	apiURL := fmt.Sprintf("%s/%s", strings.TrimRight(baseURL, "/"), strings.TrimLeft(apiPath, "/"))
+	// Construct full URL with proper path components
+	baseURL = strings.TrimRight(baseURL, "/")
+	apiBase := strings.TrimRight(DefaultAPIBase, "/")
+	apiPath = strings.TrimLeft(apiPath, "/")
+
+	apiURL := fmt.Sprintf("%s%s/%s", baseURL, apiBase, apiPath)
+	logger.Debugf("Constructed API URL: %s", apiURL)
 
 	// Prepare request body
 	body := map[string]interface{}{
