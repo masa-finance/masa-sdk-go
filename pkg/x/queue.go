@@ -189,15 +189,27 @@ func (rq *RequestQueue) Start() {
 // processQueue continuously checks for and distributes items from the priority queues
 func (rq *RequestQueue) processQueue() {
 	ticker := time.NewTicker(100 * time.Millisecond)
-	for range ticker.C {
-		rq.mu.Lock()
-		for _, queue := range rq.queues {
-			if queue.Len() > 0 {
-				item := heap.Pop(queue).(*PriorityItem)
-				rq.jobChannel <- item.data
+	logTicker := time.NewTicker(30 * time.Second) // Add logging ticker for queue metrics
+
+	for {
+		select {
+		case <-ticker.C:
+			rq.mu.Lock()
+			for _, queue := range rq.queues {
+				if queue.Len() > 0 {
+					item := heap.Pop(queue).(*PriorityItem)
+					rq.jobChannel <- item.data
+				}
 			}
+			rq.mu.Unlock()
+
+		case <-logTicker.C:
+			rq.mu.Lock()
+			logger.Infof("Queue sizes - Search: %d, Profile: %d",
+				rq.queues[SearchRequest].Len(),
+				rq.queues[ProfileRequest].Len())
+			rq.mu.Unlock()
 		}
-		rq.mu.Unlock()
 	}
 }
 
