@@ -25,11 +25,12 @@ var (
 	logLevel LogLevel
 
 	// Color definitions
-	debugColor = color.New(color.FgCyan)
-	infoColor  = color.New(color.FgGreen)
-	warnColor  = color.New(color.FgYellow)
-	errorColor = color.New(color.FgRed)
-	timeColor  = color.New(color.FgWhite)
+	debugColor  = color.New(color.FgCyan)
+	infoColor   = color.New(color.FgGreen)
+	warnColor   = color.New(color.FgYellow)
+	errorColor  = color.New(color.FgRed)
+	timeColor   = color.New(color.FgWhite)
+	numberColor = color.New(color.FgHiBlue)
 )
 
 // formatLog creates a pretty formatted log message
@@ -120,4 +121,9 @@ func GetLevel() string {
 	default:
 		return "UNKNOWN"
 	}
+}
+
+// FormatNumber formats a number with color
+func FormatNumber(n int) string {
+	return numberColor.Sprintf("%d", n)
 }

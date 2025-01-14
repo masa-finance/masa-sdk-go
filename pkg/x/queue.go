@@ -97,6 +97,8 @@ type RequestQueue struct {
 	maxWorkers        int                            // Maximum number of concurrent workers
 	requestsPerSecond float64                        // Rate limit for API requests
 	mu                sync.Mutex                     // Mutex for thread-safe operations
+	paused            bool                           // Pause state for queue processing
+	pauseMux          sync.RWMutex                   // Mutex for pause state access
 }
 
 // NewRequestQueue creates and initializes a new RequestQueue instance
@@ -191,28 +193,45 @@ func (rq *RequestQueue) Start() {
 // processQueue continuously checks for and distributes items from the priority queues
 func (rq *RequestQueue) processQueue() {
 	ticker := time.NewTicker(100 * time.Millisecond)
-	logTicker := time.NewTicker(5 * time.Second) // More frequent logging for better visibility
+	logTicker := time.NewTicker(30 * time.Second)
 
 	for {
 		select {
 		case <-ticker.C:
-			rq.mu.Lock()
-			for _, queue := range rq.queues {
-				if queue.Len() > 0 {
-					item := heap.Pop(queue).(*PriorityItem)
-					rq.jobChannel <- item.data
+			rq.pauseMux.RLock()
+			if !rq.paused {
+				rq.mu.Lock()
+				for _, queue := range rq.queues {
+					if queue.Len() > 0 {
+						item := heap.Pop(queue).(*PriorityItem)
+						rq.jobChannel <- item.data
+					}
 				}
+				rq.mu.Unlock()
 			}
-			rq.mu.Unlock()
+			rq.pauseMux.RUnlock()
 
 		case <-logTicker.C:
+			rq.pauseMux.RLock()
+			isPaused := rq.paused
+			rq.pauseMux.RUnlock()
+
 			rq.mu.Lock()
-			logger.Infof("Queue sizes - Search: %d, Profile: %d",
-				rq.queues[SearchRequest].Len(),
-				rq.queues[ProfileRequest].Len())
+			logger.Infof("Queue status - State: %s | Search: %s, Profile: %s",
+				getQueueState(isPaused),
+				logger.FormatNumber(rq.queues[SearchRequest].Len()),
+				logger.FormatNumber(rq.queues[ProfileRequest].Len()))
 			rq.mu.Unlock()
 		}
 	}
+}
+
+// getQueueState returns the queue state as a string
+func getQueueState(isPaused bool) string {
+	if isPaused {
+		return "PAUSED"
+	}
+	return "ACTIVE"
 }
 
 // start begins the worker's processing loop
@@ -348,4 +367,20 @@ func (rq *RequestQueue) GetQueueLength(reqType RequestType) int {
 //   - int: Number of active worker goroutines
 func (rq *RequestQueue) GetActiveWorkers() int {
 	return rq.maxWorkers
+}
+
+// Pause temporarily stops processing new requests
+func (rq *RequestQueue) Pause() {
+	rq.pauseMux.Lock()
+	defer rq.pauseMux.Unlock()
+	rq.paused = true
+	logger.Infof("Request queue paused")
+}
+
+// Resume continues processing requests
+func (rq *RequestQueue) Resume() {
+	rq.pauseMux.Lock()
+	defer rq.pauseMux.Unlock()
+	rq.paused = false
+	logger.Infof("Request queue resumed")
 }
