@@ -4,8 +4,12 @@ package x
 
 import (
 	"container/heap"
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/masa-finance/masa-sdk-go/pkg/logger"
@@ -178,6 +182,30 @@ func (rq *RequestQueue) newWorker(id int) *Worker {
 
 // Start begins processing requests by initializing workers and starting the queue processor
 func (rq *RequestQueue) Start() {
+	// Set up signal handling for graceful shutdown
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Handle shutdown signals in a separate goroutine
+	go func() {
+		sig := <-sigChan
+		logger.Infof("Received signal %v, initiating graceful shutdown...", sig)
+
+		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		defer cancel()
+
+		if err := rq.StopWithContext(ctx); err != nil {
+			logger.Errorf("Error during graceful shutdown: %v", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}()
+
+	// Load existing state
+	if err := rq.LoadState(); err != nil {
+		logger.Warnf("Failed to load queue state: %v", err)
+	}
+
 	// Initialize workers
 	rq.workers = make([]*Worker, rq.maxWorkers)
 	for i := 0; i < rq.maxWorkers; i++ {
@@ -337,11 +365,72 @@ func (w *Worker) processRequest(data RequestData) {
 // Stop gracefully stops all workers and the queue
 func (rq *RequestQueue) Stop() {
 	logger.Infof("Stopping request queue...")
+
+	// Set queue to paused state to prevent new items being processed
+	rq.Pause()
+
+	// Wait for in-flight requests to complete
+	rq.mu.Lock()
+	activeRequests := 0
+	for _, queue := range rq.queues {
+		activeRequests += queue.Len()
+	}
+	rq.mu.Unlock()
+
+	if activeRequests > 0 {
+		logger.Infof("Waiting for %d active requests to complete...", activeRequests)
+		// Give some time for in-flight requests to complete
+		time.Sleep(5 * time.Second)
+	}
+
+	// Save state before stopping
+	if err := rq.SaveState(); err != nil {
+		logger.Warnf("Failed to save queue state: %v", err)
+	}
+
+	// Signal all workers to stop
 	for _, worker := range rq.workers {
 		worker.quit <- true
 	}
+
+	// Wait for workers to finish
+	for _, worker := range rq.workers {
+		worker.rateLimit.Stop()
+	}
+
+	// Close job channel after all workers have stopped
 	close(rq.jobChannel)
-	logger.Infof("Request queue stopped")
+
+	logger.Infof("Request queue stopped gracefully")
+}
+
+// StopWithContext provides context-aware shutdown with timeout control
+func (rq *RequestQueue) StopWithContext(ctx context.Context) error {
+	logger.Infof("Initiating graceful shutdown of request queue...")
+
+	// Set queue to paused state
+	rq.Pause()
+
+	done := make(chan struct{})
+	go func() {
+		rq.Stop()
+		close(done)
+	}()
+
+	select {
+	case <-ctx.Done():
+		logger.Warnf("Shutdown deadline exceeded, forcing queue stop")
+		// Force close channels
+		close(rq.jobChannel)
+		for _, worker := range rq.workers {
+			worker.rateLimit.Stop()
+			close(worker.quit)
+		}
+		return ctx.Err()
+	case <-done:
+		logger.Infof("Queue shutdown completed successfully")
+		return nil
+	}
 }
 
 // GetQueueLength returns the current length of a specific queue
