@@ -28,11 +28,8 @@ type RequestDataState struct {
 	Data     map[string]interface{} `json:"data"`
 }
 
-// SaveState saves the current queue state to disk
-func (rq *RequestQueue) SaveState() error {
-	rq.mu.Lock()
-	defer rq.mu.Unlock()
-
+// getQueueState extracts the current state from the queue
+func (rq *RequestQueue) getQueueState() QueueState {
 	state := QueueState{
 		LastSaved: time.Now(),
 		Queues:    make(map[RequestType][]RequestDataState),
@@ -52,6 +49,24 @@ func (rq *RequestQueue) SaveState() error {
 		}
 		state.Queues[reqType] = items
 	}
+
+	return state
+}
+
+// GetCurrentState returns the current queue state without saving to disk
+func (rq *RequestQueue) GetCurrentState() QueueState {
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
+
+	return rq.getQueueState()
+}
+
+// SaveState saves the current queue state to disk
+func (rq *RequestQueue) SaveState() error {
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
+
+	state := rq.getQueueState()
 
 	// Ensure directory exists
 	stateDir := getStateDir()
