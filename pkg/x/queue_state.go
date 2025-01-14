@@ -17,8 +17,9 @@ const (
 
 // QueueState represents the serializable state of the queue
 type QueueState struct {
-	LastSaved time.Time                          `json:"last_saved"`
-	Queues    map[RequestType][]RequestDataState `json:"queues"`
+	LastSaved      time.Time                          `json:"last_saved"`
+	Queues         map[RequestType][]RequestDataState `json:"queues"`
+	RequestsPerSec float64                            `json:"requests_per_sec"`
 }
 
 // RequestDataState is a serializable version of RequestData
@@ -31,8 +32,9 @@ type RequestDataState struct {
 // getQueueState extracts the current state from the queue
 func (rq *RequestQueue) getQueueState() QueueState {
 	state := QueueState{
-		LastSaved: time.Now(),
-		Queues:    make(map[RequestType][]RequestDataState),
+		LastSaved:      time.Now(),
+		Queues:         make(map[RequestType][]RequestDataState),
+		RequestsPerSec: rq.requestsPerSecond,
 	}
 
 	// Convert current queue items to serializable format
@@ -161,6 +163,11 @@ func (rq *RequestQueue) LoadState() error {
 				priority: item.Priority,
 			})
 		}
+	}
+
+	// Restore rate limit if it was saved
+	if state.RequestsPerSec > 0 {
+		rq.SetRequestsPerSecond(state.RequestsPerSec)
 	}
 
 	logger.Infof("Queue state loaded from %s (last saved: %s)",

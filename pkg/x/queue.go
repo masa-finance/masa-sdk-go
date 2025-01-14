@@ -544,3 +544,23 @@ func (rq *RequestQueue) IsInitialized() bool {
 	defer rq.mu.Unlock()
 	return rq.workers != nil
 }
+
+// SetRequestsPerSecond updates the rate limit for API requests
+func (rq *RequestQueue) SetRequestsPerSecond(rps float64) {
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
+
+	if rps <= 0 {
+		rps = DefaultAPIRequestsPerSecond
+	}
+
+	rq.requestsPerSecond = rps
+	logger.Infof("Queue rate limit set to %.2f requests per second", rps)
+
+	// Update existing workers' rate limiters
+	if rq.workers != nil {
+		for _, worker := range rq.workers {
+			worker.rateLimit.Reset(time.Second / time.Duration(rps))
+		}
+	}
+}
