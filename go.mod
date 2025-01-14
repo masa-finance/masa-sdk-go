@@ -6,6 +6,7 @@ toolchain go1.22.5
 
 require (
 	github.com/fatih/color v1.18.0
+	github.com/imperatrona/twitter-scraper v0.0.15
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/onsi/ginkgo/v2 v2.22.0
@@ -16,6 +17,7 @@ require (
 )
 
 require (
+	github.com/AlexEidt/Vidio v1.5.1 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect

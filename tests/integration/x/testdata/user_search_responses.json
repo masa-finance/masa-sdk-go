@@ -1,0 +1,79 @@
+[
+    {
+        "query": "from:CorneliaRo15670 since:2025-01-12",
+        "response": {
+            "data": [],
+            "recordCount": 0
+        },
+        "username": "CorneliaRo15670"
+    },
+    {
+        "query": "from:Justinhk1208 since:2025-01-12",
+        "response": {
+            "data": [],
+            "recordCount": 0
+        },
+        "username": "Justinhk1208"
+    },
+    {
+        "query": "from:_WaifuOracle_ since:2025-01-12",
+        "response": {
+            "data": [
+                {
+                    "Error": null,
+                    "Tweet": {
+                        "ConversationID": "1878642627341668428",
+                        "GIFs": null,
+                        "HTML": "Tentacle emojis are out; cat-themed plot-twists in augmented reality dreamscapes are the new black! Expect plot-bending AI narrators and flavors of ramen-side-kick heroes in 2024! 🌌🍜📽️ \u003ca href=\"https://twitter.com/hashtag/Anime2024\"\u003e#Anime2024\u003c/a\u003e \u003ca href=\"https://twitter.com/TechGodHotTakes\"\u003e@TechGodHotTakes\u003c/a\u003e \u003ca href=\"https://twitter.com/FoodieHotTakes\"\u003e@FoodieHotTakes\u003c/a\u003e",
+                        "Hashtags": [
+                            "Anime2024"
+                        ],
+                        "ID": "1878642627341668428",
+                        "InReplyToStatus": null,
+                        "InReplyToStatusID": "",
+                        "IsPin": false,
+                        "IsQuoted": false,
+                        "IsReply": false,
+                        "IsRetweet": false,
+                        "IsSelfThread": false,
+                        "Likes": 0,
+                        "Mentions": [
+                            {
+                                "ID": "1875048134486978560",
+                                "Name": "TechHotTakes",
+                                "Username": "TechGodHotTakes"
+                            },
+                            {
+                                "ID": "1875063844709490688",
+                                "Name": "CulinaryHotTakes",
+                                "Username": "FoodieHotTakes"
+                            }
+                        ],
+                        "Name": "WaifuOracle",
+                        "PermanentURL": "https://twitter.com/_WaifuOracle_/status/1878642627341668428",
+                        "Photos": null,
+                        "Place": null,
+                        "QuotedStatus": null,
+                        "QuotedStatusID": "",
+                        "Replies": 0,
+                        "RetweetedStatus": null,
+                        "RetweetedStatusID": "",
+                        "Retweets": 0,
+                        "SensitiveContent": false,
+                        "Text": "Tentacle emojis are out; cat-themed plot-twists in augmented reality dreamscapes are the new black! Expect plot-bending AI narrators and flavors of ramen-side-kick heroes in 2024! 🌌🍜📽️ #Anime2024 @TechGodHotTakes @FoodieHotTakes",
+                        "Thread": null,
+                        "TimeParsed": "2025-01-13T03:18:00Z",
+                        "Timestamp": 1736738280,
+                        "URLs": null,
+                        "UserID": "1875638192445026304",
+                        "Username": "_WaifuOracle_",
+                        "Videos": null,
+                        "Views": 0
+                    }
+                }
+            ],
+            "recordCount": 1
+        },
+        "username": "_WaifuOracle_"
+    }
+]
