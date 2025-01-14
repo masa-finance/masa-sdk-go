@@ -109,10 +109,40 @@ func (rq *RequestQueue) LoadState() error {
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
 
-	// Restore items to queues
+	// Restore items to queues, checking for duplicates
 	for reqType, items := range state.Queues {
 		queue := rq.queues[reqType]
 		for _, item := range items {
+			// Check for duplicates without using IsDuplicateRequest to avoid deadlock
+			isDuplicate := false
+			tempQueue := *queue
+
+			var compareKey string
+			var newValue string
+
+			switch reqType {
+			case SearchRequest:
+				compareKey = "query"
+				newValue, _ = item.Data[compareKey].(string)
+			case ProfileRequest:
+				compareKey = "username"
+				newValue, _ = item.Data[compareKey].(string)
+			}
+
+			if newValue != "" {
+				for _, existing := range tempQueue {
+					if existingValue, ok := existing.data.Data[compareKey].(string); ok && existingValue == newValue {
+						isDuplicate = true
+						break
+					}
+				}
+			}
+
+			if isDuplicate {
+				logger.Debugf("Skipping duplicate request during state restore: %v", item.Data)
+				continue
+			}
+
 			responseChan := make(chan interface{}, 1)
 			heap.Push(queue, &PriorityItem{
 				data: RequestData{

@@ -135,20 +135,66 @@ func NewRequestQueue(maxWorkers int) *RequestQueue {
 	return rq
 }
 
-// AddRequest adds a new request to the appropriate queue and returns a response channel
-//
-// Parameters:
-//   - reqType: Type of request (search/profile)
-//   - data: Request parameters
-//   - priority: Priority level for queue ordering
-//
-// Returns:
-//   - chan interface{}: Channel for receiving the request response
-func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interface{}, priority int) chan interface{} {
+// IsDuplicateRequest checks if a request with the same key data already exists in the queue
+func (rq *RequestQueue) IsDuplicateRequest(reqType RequestType, data map[string]interface{}) bool {
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
 
+	queue := rq.queues[reqType]
+	if queue == nil {
+		return false
+	}
+
+	var compareKey string
+	var newValue string
+	var ok bool
+
+	// Determine the comparison key based on request type
+	switch reqType {
+	case SearchRequest:
+		compareKey = "query"
+		newValue, ok = data[compareKey].(string)
+	case ProfileRequest:
+		compareKey = "username"
+		newValue, ok = data[compareKey].(string)
+	default:
+		return false
+	}
+
+	if !ok || newValue == "" {
+		return false
+	}
+
+	// Check for duplicates in the queue
+	tempQueue := *queue
+	for _, item := range tempQueue {
+		if existingValue, ok := item.data.Data[compareKey].(string); ok {
+			if existingValue == newValue {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
+// AddRequest adds a new request to the appropriate queue and returns a response channel
+func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interface{}, priority int) chan interface{} {
 	responseChan := make(chan interface{}, 1)
+
+	// Check for duplicates before acquiring the main lock
+	if rq.IsDuplicateRequest(reqType, data) {
+		logger.Debugf("Duplicate request detected for %s - skipping", reqType)
+		responseChan <- &DuplicateRequestError{
+			RequestType: reqType,
+			Data:        data,
+		}
+		close(responseChan)
+		return responseChan
+	}
+
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
 
 	if queue, ok := rq.queues[reqType]; ok {
 		item := &PriorityItem{
@@ -167,6 +213,16 @@ func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interfac
 			rq.queues[ProfileRequest].Len())
 	}
 	return responseChan
+}
+
+// DuplicateRequestError represents an error when a duplicate request is detected
+type DuplicateRequestError struct {
+	RequestType RequestType
+	Data        map[string]interface{}
+}
+
+func (e *DuplicateRequestError) Error() string {
+	return fmt.Sprintf("duplicate request detected for type %s", e.RequestType)
 }
 
 // newWorker creates and initializes a new worker instance
@@ -200,6 +256,14 @@ func (rq *RequestQueue) Start() {
 		}
 		os.Exit(0)
 	}()
+
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
+
+	// Only initialize once
+	if rq.workers != nil {
+		return
+	}
 
 	// Load existing state
 	if err := rq.LoadState(); err != nil {
@@ -472,4 +536,11 @@ func (rq *RequestQueue) Resume() {
 	defer rq.pauseMux.Unlock()
 	rq.paused = false
 	logger.Infof("Request queue resumed")
+}
+
+// isInitialized checks if the queue has been started
+func (rq *RequestQueue) IsInitialized() bool {
+	rq.mu.Lock()
+	defer rq.mu.Unlock()
+	return rq.workers != nil
 }
