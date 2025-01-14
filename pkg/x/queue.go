@@ -142,7 +142,6 @@ func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interfac
 	rq.mu.Lock()
 	defer rq.mu.Unlock()
 
-	// Create response channel
 	responseChan := make(chan interface{}, 1)
 
 	if queue, ok := rq.queues[reqType]; ok {
@@ -156,7 +155,10 @@ func (rq *RequestQueue) AddRequest(reqType RequestType, data map[string]interfac
 			priority: priority,
 		}
 		heap.Push(queue, item)
-		logger.Debugf("Added request to %s queue with priority %d", reqType, priority)
+		logger.Infof("Queue update - Added %s request (priority: %d). Current sizes - Search: %d, Profile: %d",
+			reqType, priority,
+			rq.queues[SearchRequest].Len(),
+			rq.queues[ProfileRequest].Len())
 	}
 	return responseChan
 }
@@ -189,7 +191,7 @@ func (rq *RequestQueue) Start() {
 // processQueue continuously checks for and distributes items from the priority queues
 func (rq *RequestQueue) processQueue() {
 	ticker := time.NewTicker(100 * time.Millisecond)
-	logTicker := time.NewTicker(30 * time.Second) // Add logging ticker for queue metrics
+	logTicker := time.NewTicker(5 * time.Second) // More frequent logging for better visibility
 
 	for {
 		select {
