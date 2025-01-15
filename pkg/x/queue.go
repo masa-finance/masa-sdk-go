@@ -551,12 +551,11 @@ func (rq *RequestQueue) SetRequestsPerSecond(rps float64) {
 	defer rq.mu.Unlock()
 
 	if rps <= 0 {
+		logger.Warnf("Invalid rate limit %.2f, using default %v", rps, DefaultAPIRequestsPerSecond)
 		rps = DefaultAPIRequestsPerSecond
 	}
 
 	rq.requestsPerSecond = rps
 	logger.Infof("Queue rate limit set to %.2f requests per second", rps)
-
-	// Update the global rate limiter
 	rq.globalRateLimit.Reset(time.Second / time.Duration(rps))
 }
