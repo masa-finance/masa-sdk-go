@@ -89,7 +89,6 @@ type Worker struct {
 	id         int              // Unique identifier for the worker
 	jobChannel chan RequestData // Channel for receiving jobs
 	quit       chan bool        // Channel for shutdown signaling
-	rateLimit  *time.Ticker     // Rate limiter for API requests
 	queue      *RequestQueue    // Reference to parent queue
 }
 
@@ -103,6 +102,7 @@ type RequestQueue struct {
 	mu                sync.Mutex                     // Mutex for thread-safe operations
 	paused            bool                           // Pause state for queue processing
 	pauseMux          sync.RWMutex                   // Mutex for pause state access
+	globalRateLimit   *time.Ticker                   // Global rate limiter shared across workers
 }
 
 // NewRequestQueue creates and initializes a new RequestQueue instance
@@ -122,6 +122,7 @@ func NewRequestQueue(maxWorkers int) *RequestQueue {
 		maxWorkers:        maxWorkers,
 		jobChannel:        make(chan RequestData, maxWorkers*2),
 		requestsPerSecond: DefaultAPIRequestsPerSecond,
+		globalRateLimit:   time.NewTicker(time.Second / DefaultAPIRequestsPerSecond),
 	}
 
 	// Initialize queues
@@ -231,7 +232,6 @@ func (rq *RequestQueue) newWorker(id int) *Worker {
 		id:         id,
 		jobChannel: rq.jobChannel,
 		quit:       make(chan bool),
-		rateLimit:  time.NewTicker(time.Second / time.Duration(rq.requestsPerSecond)),
 		queue:      rq,
 	}
 }
@@ -331,7 +331,7 @@ func (w *Worker) start() {
 	for {
 		select {
 		case job := <-w.jobChannel:
-			<-w.rateLimit.C // Rate limiting
+			<-w.queue.globalRateLimit.C // Global rate limiting
 			w.processRequest(job)
 		case <-w.quit:
 			return
@@ -459,7 +459,7 @@ func (rq *RequestQueue) Stop() {
 
 	// Wait for workers to finish
 	for _, worker := range rq.workers {
-		worker.rateLimit.Stop()
+		worker.queue.globalRateLimit.Stop()
 	}
 
 	// Close job channel after all workers have stopped
@@ -487,7 +487,7 @@ func (rq *RequestQueue) StopWithContext(ctx context.Context) error {
 		// Force close channels
 		close(rq.jobChannel)
 		for _, worker := range rq.workers {
-			worker.rateLimit.Stop()
+			worker.queue.globalRateLimit.Stop()
 			close(worker.quit)
 		}
 		return ctx.Err()
@@ -557,10 +557,6 @@ func (rq *RequestQueue) SetRequestsPerSecond(rps float64) {
 	rq.requestsPerSecond = rps
 	logger.Infof("Queue rate limit set to %.2f requests per second", rps)
 
-	// Update existing workers' rate limiters
-	if rq.workers != nil {
-		for _, worker := range rq.workers {
-			worker.rateLimit.Reset(time.Second / time.Duration(rps))
-		}
-	}
+	// Update the global rate limiter
+	rq.globalRateLimit.Reset(time.Second / time.Duration(rps))
 }

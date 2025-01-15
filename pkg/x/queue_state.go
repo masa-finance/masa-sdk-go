@@ -76,14 +76,30 @@ func (rq *RequestQueue) SaveState() error {
 		return err
 	}
 
-	// Write state to file
+	// Write state to temporary file first
+	statePath := filepath.Join(stateDir, queueStateFile)
+	tempPath := statePath + ".tmp"
+
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		return err
 	}
 
-	statePath := filepath.Join(stateDir, queueStateFile)
-	if err := os.WriteFile(statePath, data, 0644); err != nil {
+	// Write to temp file first
+	if err := os.WriteFile(tempPath, data, 0644); err != nil {
+		return err
+	}
+
+	// Backup existing state file if it exists
+	if _, err := os.Stat(statePath); err == nil {
+		backupPath := statePath + ".bak"
+		if err := os.Rename(statePath, backupPath); err != nil {
+			logger.Warnf("Failed to create backup file: %v", err)
+		}
+	}
+
+	// Atomically rename temp file to actual state file
+	if err := os.Rename(tempPath, statePath); err != nil {
 		return err
 	}
 
@@ -94,13 +110,26 @@ func (rq *RequestQueue) SaveState() error {
 // LoadState loads the queue state from disk
 func (rq *RequestQueue) LoadState() error {
 	statePath := filepath.Join(getStateDir(), queueStateFile)
+
+	// Try loading the main state file
 	data, err := os.ReadFile(statePath)
 	if err != nil {
-		if os.IsNotExist(err) {
+		if !os.IsNotExist(err) {
+			// Try loading from backup if main file is corrupted
+			backupPath := statePath + ".bak"
+			data, err = os.ReadFile(backupPath)
+			if err != nil {
+				if os.IsNotExist(err) {
+					logger.Debugf("No existing queue state found at %s", statePath)
+					return nil
+				}
+				return err
+			}
+			logger.Warnf("Loaded queue state from backup file")
+		} else {
 			logger.Debugf("No existing queue state found at %s", statePath)
 			return nil
 		}
-		return err
 	}
 
 	var state QueueState
